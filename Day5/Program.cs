@@ -22,10 +22,12 @@ namespace Day5 {
 
     public struct OpCode {
       public int Code;
+      public int OriginalCode;
 
       private List<bool> parameterMode;
 
       public OpCode( int opCode ) {
+        OriginalCode = opCode;
         parameterMode = new List<bool>();
         Code = opCode % 100;
         opCode = opCode / 100;
@@ -117,40 +119,76 @@ namespace Day5 {
       }
 
       void Multiply( OpCode op) {
-        int leftVal = GetValue( NextValue(), op.GetMode( 0 ) );
-        int rightVal = GetValue( NextValue(), op.GetMode( 1 ) );
-        WriteValue( leftVal * rightVal, NextValue());
+        int first = NextValue();
+        int second = NextValue();
+        int third = NextValue();
+        Console.Write( string.Join( ",", new []{op.OriginalCode,first,second,third} ) + " : ");
+
+        int leftVal = GetValue( first, op.GetMode( 0 ) );
+        int rightVal = GetValue( second, op.GetMode( 1 ) );
+        var outVal = leftVal * rightVal;
+        WriteValue( outVal, third);
+        Console.WriteLine( $"{leftVal} * {rightVal} = {outVal} to {third}");
       }
       void Add( OpCode op ) {
-        int leftVal = GetValue( NextValue(), op.GetMode( 0 ) );
-        int rightVal = GetValue( NextValue(), op.GetMode( 1 ) );
-        WriteValue( leftVal + rightVal,NextValue( ));
+        int first = NextValue();
+        int leftVal = GetValue( first, op.GetMode( 0 ) );
+        var second = NextValue();
+        int rightVal = GetValue( second, op.GetMode( 1 ) );
+        var third = NextValue( );
+
+        Console.Write( string.Join( ",", new []{op.OriginalCode,first,second,third} )+ " : ");
+
+        var outVal = leftVal + rightVal;
+        WriteValue( outVal,third);
+        Console.WriteLine( $"{leftVal} + {rightVal} = {outVal} to {third}");
       }
 
       void JumpIfTrue( OpCode op ) {
-        int val =  GetValue( NextValue(), op.GetMode( 0 ) );
-        var secondParam = NextValue();
+        var first = NextValue();
+        int val =  GetValue( first, op.GetMode( 0 ) );
+        var second = NextValue();
+        Console.Write( string.Join( ",", new []{op.OriginalCode,first,second} )+ " : ");
         if ( val != 0 ) {
-          pointer =  GetValue( secondParam, op.GetMode( 1 ) );
+          pointer =  GetValue( second, op.GetMode( 1 ) );
         }
+        Console.WriteLine( $"{val} is true, jump to {pointer}");
       }
       void JumpIfFalse( OpCode op ) {
-        int val =  GetValue( NextValue(), op.GetMode( 0 ) );
-        var secondParam = NextValue();
+        var first = NextValue();
+        int val =  GetValue( first, op.GetMode( 0 ) );
+        var second = NextValue();
+        Console.Write( string.Join( ",", new []{op.OriginalCode,first,second} )+ " : ");
         if ( val == 0 ) {
-          pointer =   GetValue( secondParam, op.GetMode( 1 ) );
+          pointer =  GetValue( second, op.GetMode( 1 ) );
         }
+        Console.WriteLine( $"{val} is false, jump to {pointer}");
       }
 
       void LessThan( OpCode op ) {
-        int leftVal = GetValue( NextValue(), op.GetMode( 0 ) );
-        int rightVal = GetValue( NextValue(), op.GetMode( 1 ) );
-        WriteValue( leftVal <= rightVal ? 1 : 0,NextValue( ));
+        var first = NextValue();
+        int leftVal = GetValue( first, op.GetMode( 0 ) );
+        var second = NextValue();
+        int rightVal = GetValue( second, op.GetMode( 1 ) );
+        var third = NextValue( );
+
+        Console.Write( string.Join( ",", new []{op.OriginalCode,first,second,third} )+ " : ");
+
+        WriteValue( leftVal < rightVal ? 1 : 0,third);
+
+        Console.WriteLine( $"Compare less than {leftVal} to {rightVal} to {third}");
       }
       void AreEqual( OpCode op ) {
-        int leftVal = GetValue( NextValue(), op.GetMode( 0 ) );
-        int rightVal = GetValue( NextValue(), op.GetMode( 1 ) );
-        WriteValue( leftVal == rightVal ? 1 : 0,NextValue( ));
+        var first = NextValue();
+        int leftVal = GetValue( first, op.GetMode( 0 ) );
+        var second = NextValue();
+        int rightVal = GetValue( second, op.GetMode( 1 ) );
+        var third = NextValue( );
+        Console.Write( string.Join( ",", new []{op.OriginalCode,first,second,third} )+ " : ");
+
+        WriteValue( leftVal == rightVal ? 1 : 0,third);
+
+        Console.WriteLine( $"Compare {leftVal} to {rightVal} to {third}");
       }
 
       void Input( OpCode op ) {
