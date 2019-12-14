@@ -12,12 +12,10 @@ namespace Day13 {
     private static int nbLines = 24;
     private static int nbColumns = 46;
     private static int SCore = 0;
-    private static char[][] screen = new char[nbLines][];
+    private static TileType[][] screen = new TileType[nbLines][];
     private static int lineOfPaddle = 22;
-    private static  int lastXBall = -1;
     private static  int currentXBall = -1;
     private static  int currentXPaddle = -1;
-    private static Direction BallDirection =  Direction.Neutral;
 
     public enum Direction {
       Neutral,
@@ -27,123 +25,60 @@ namespace Day13 {
     static void Main( string[] args ) {
       Console.WriteLine( "Hello World!" );
       for ( int i = 0; i < nbLines; i++ ) {
-        screen[i] = new char[nbColumns];
+        screen[i] = new TileType[nbColumns];
       }
       var computer = new IntCodeComputer( input );
 
-      int limit = 100;
+      int limit = 30000;
       computer.Execute();
       int nextInput = 0;
       while ( !computer.Execute(nextInput)  && (limit--) >= 0) {
+        ComputerToScreen( computer );
 
-        while ( computer.outputs.Any() ) {
-          var X = (int) computer.outputs.Dequeue();
-          int Y = (int) computer.outputs.Dequeue();
 
-          if ( X == -1 && Y == 0 ) {
-            SCore = (int) computer.outputs.Dequeue();
-          }
-          else {
-            var tile = (TileType) (int) computer.outputs.Dequeue();
 
-            screen[Y][X] =TileToChar( tile );
-            if ( tile == TileType.Ball ) {
-              currentXBall = X;
-            }
-            else if ( tile == TileType.HorizontalPaddle ) {
-              currentXPaddle = X;
-            }
-          }
-
+        if ( currentXBall < currentXPaddle ) {
+          nextInput = -1;//go left
         }
-
-
-        PrintScreen();
-
-        //Console.WriteLine("WaitForInput");
-
-        int nextXBall = currentXBall;
-        //compute direction of ball .
-        if ( lastXBall == currentXBall ) {
-          BallDirection = Direction.Neutral;
-        }
-        else if ( lastXBall < currentXBall ) {
-          BallDirection = Direction.Right;
-          nextXBall++;
-        }
-        else {
-          BallDirection = Direction.Left;
-          nextXBall--;
-        }
-
-        lastXBall = currentXBall;
-
-        if ( nextXBall < currentXPaddle ) {
-          nextInput = -1;//go left;
-        }
-        else if ( nextXBall > currentXPaddle ) {
-          nextInput = 1;//go right;
+        else if ( currentXBall > currentXPaddle ) {
+          nextInput = 1;//go right
         }
         else {
           nextInput = 0;
         }
       }
+      ComputerToScreen( computer );
+    }
 
+    private static void ComputerToScreen( IntCodeComputer computer ) {
+      while ( computer.outputs.Any() ) {
+        var X = (int) computer.outputs.Dequeue();
+        int Y = (int) computer.outputs.Dequeue();
 
-      //Console.Write( $"{panels.Count( kv => kv.Value == TileType.Block )}" );
+        if ( X == -1 && Y == 0 ) {
+          SCore = (int) computer.outputs.Dequeue();
+        }
+        else {
+          var tile = (TileType) (int) computer.outputs.Dequeue();
 
+          screen[Y][X] = tile;
+          if ( tile == TileType.Ball ) {
+            currentXBall = X;
+          }
+          else if ( tile == TileType.HorizontalPaddle ) {
+            currentXPaddle = X;
+          }
+        }
+      }
+      PrintScreen();
     }
 
     static void PrintScreen() {
       Console.WriteLine(SCore);
-      foreach ( var line in screen ) {
+      foreach ( var line in screen.Select( s => s.Select( TileToChar ).ToArray()  ) ) {
         Console.WriteLine(line);
       }
-    }
-
-    static string DrawPanels( Dictionary<(int X, int Y), TileType> panels ) {
-      int minX = Int32.MaxValue;
-      int minY = Int32.MaxValue;
-      int maxX = Int32.MinValue;
-      int maxY = Int32.MinValue;
-      foreach ( (int X, int Y) key in panels.Keys ) {
-        minX = Math.Min( minX, key.X );
-        minY = Math.Min( minY, key.Y );
-        maxX = Math.Max( maxX, key.X );
-        maxY = Math.Max( maxY, key.Y );
-      }
-      TileType ColorPanel( int X, int Y ) {
-        if ( panels.TryGetValue( ( X, Y ), out TileType color) ) {
-          return color;
-        }
-
-        return TileType.Empty;
-      }
-      var sb = new StringBuilder();
-      for ( int line = minY; line <= maxY; line++ ) {
-        for ( int col = minX; col <= maxX; col++ ) {
-          switch ( ColorPanel( col, line ) ) {
-            case TileType.Empty:
-              sb.Append( ' ' );
-              break;
-            case TileType.Ball:
-              sb.Append( 'O' );
-              break;
-            case TileType.Block:
-              sb.Append( '#' );
-              break;
-            case TileType.Wall:
-              sb.Append( '█' );
-              break;
-            case TileType.HorizontalPaddle:
-              sb.Append( '━' );
-              break;
-          }
-        }
-        sb.AppendLine();
-      }
-      Console.WriteLine($"{minX},{maxX},{minY},{maxY}");
-      return sb.ToString();
+      Console.WriteLine(Array.IndexOf( screen[lineOfPaddle], TileType.HorizontalPaddle));
     }
 
     static char TileToChar( TileType tile ) {
